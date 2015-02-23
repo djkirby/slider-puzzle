@@ -1,30 +1,18 @@
-var GameBoard = React.createClass({
+var TileGame = React.createClass({
   getInitialState: function() {
     return {
       tiles: [1, 2, 3, 4, 5, 6, 7, 8, null]
     }
   },
-  attemptToMoveTile: function(tileId) {
-    if (this.canMoveTile(tileId, 'LEFT')) {
+  attemptToMoveTile: function(position) {
+    if (position % 3 != 0 && !this.state.tiles[position - 1]) {
       this.swapTiles(position, position - 1);
-    } else if (this.canMoveTile(tileId, 'RIGHT')) {
+    } else if ((position - 2) % 3 != 0 && !this.state.tiles[position + 1]) {
       this.swapTiles(position, position + 1);
-    } else if (this.canMoveTile(tileId, 'UP')) {
+    } else if (position > 2 && !this.state.tiles[position - 3]) {
       this.swapTiles(position, position - 3);
-    } else if (this.canMoveTile(tileId, 'DOWN')) {
+    } else if (position < 6 && !this.state.tiles[position + 3]) {
       this.swapTiles(position, position + 3);
-    }
-  },
-  canMoveTile: function(tileId, direction) {
-    var position = this.state.tiles.indexOf(tileId);
-    if (direction == 'LEFT') {
-      return (position % 3 != 0 && !this.state.tiles[position - 1]);
-    } else if (direction == 'RIGHT') {
-      return ((position - 2) % 3 != 0 && !this.state.tiles[position + 1]);
-    } else if (direction == 'UP') {
-      return (position > 3 && !this.state.tiles[position - 3]);
-    } else if (direction == 'DOWN') {
-      return (position < 6 && !this.state.tiles[position + 3]);
     }
   },
   swapTiles: function(tilePosition, newPosition) {
@@ -35,31 +23,53 @@ var GameBoard = React.createClass({
     this.setState({ tiles: tiles });
   },
   handleClick: function(childComponent) {
-    this.attemptToMoveTile(childComponent.props.id);
+    this.attemptToMoveTile(this.state.tiles.indexOf(childComponent.props.id));
+    this.checkCompletion();
+  },
+  checkCompletion: function() {
+    if (_.isEqual(this.state.tiles, this.getInitialState().tiles)) {
+      alert('Winner!');
+    }
+  },
+  shuffleTiles: function() {
+    this.setState(this.getInitialState());
+    for (i = 0; i < 200; i++) {
+      var emptyPosition = this.state.tiles.indexOf(null);
+      possibleMoves = [];
+      if ((emptyPosition - 2) % 3 != 0) {
+        possibleMoves.push(emptyPosition + 1);
+      }
+      if (emptyPosition % 3 != 0) {
+        possibleMoves.push(emptyPosition - 1);
+      }
+      if (emptyPosition > 3) {
+        possibleMoves.push(emptyPosition - 3);
+      }
+      if (emptyPosition < 6) {
+        possibleMoves.push(emptyPosition + 3);
+      }
+      this.attemptToMoveTile(possibleMoves[Math.floor(Math.random() * possibleMoves.length)]);
+    }
   },
   render: function() {
-    var topRowTiles = this.state.tiles.slice(0, 3).map(function (tileId) {
+    var tileNodes = this.state.tiles.map(function (tileId) {
       return (
         <Tile id={tileId} onClick={this.handleClick} />
       );
     }.bind(this));
-    var middleRowTiles = this.state.tiles.slice(3, 6).map(function (tileId) {
-      return (
-        <Tile id={tileId} onClick={this.handleClick} />
-      );
-    }.bind(this));
-    var bottomRowTiles = this.state.tiles.slice(6, 9).map(function (tileId) {
-      return (
-        <Tile id={tileId} onClick={this.handleClick} />
-      );
-    }.bind(this));
+    tileNodes.splice(3, 0, <br />);
+    tileNodes.splice(7, 0, <br />);
+    var style = {
+      width: "306px",
+      border: "3px solid"
+    }
     return (
       <div>
-        {topRowTiles}
+        <div style={style}>
+          {tileNodes}
+        </div>
         <br />
-        {middleRowTiles}
-        <br />
-        {bottomRowTiles}
+        <button type="button" onClick={this.shuffleTiles}>Shuffle</button>
       </div>
     );
   }
@@ -76,11 +86,15 @@ var Tile = React.createClass({
   },
   render: function() {
     var style = {
-      height: "100px",
-      width: "100px",
+      height: 100,
+      width: 100,
+      lineHeight: 3,
+      verticalAlign: "middle",
+      fontSize: 32,
+      fontWeight: "bold",
       display: "inline-block",
       textAlign: "center",
-      border: this.props.id ? "1px solid" : "none"
+      border: "1px solid"
     };
     return (
       <div onClick={this.handleClick} style={style}>
@@ -91,6 +105,6 @@ var Tile = React.createClass({
 });
 
 React.render(
-  <GameBoard />,
+  <TileGame />,
   document.getElementById("content")
 );
