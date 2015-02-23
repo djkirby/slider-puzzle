@@ -2,7 +2,8 @@ var TileGame = React.createClass({
   getInitialState: function() {
     return {
       tiles: [1, 2, 3, 4, 5, 6, 7, 8, null],
-      moves: 0
+      moves: 0,
+      secondsElapsed: 0
     }
   },
   attemptToMoveTile: function(position) {
@@ -31,6 +32,7 @@ var TileGame = React.createClass({
   checkCompletion: function() {
     if (_.isEqual(this.state.tiles, this.getInitialState().tiles)) {
       alert('Winner!');
+      this.stopTimer();
     }
   },
   shuffleTiles: function() {
@@ -52,6 +54,15 @@ var TileGame = React.createClass({
       }
       this.attemptToMoveTile(possibleMoves[Math.floor(Math.random() * possibleMoves.length)]);
     }
+    this.startTimer();
+  },
+  startTimer: function() {
+    this.timer = setInterval(function() {
+      this.setState({ secondsElapsed: this.state.secondsElapsed + 1 })
+    }.bind(this), 1000);
+  },
+  stopTimer: function() {
+    clearInterval(this.timer);
   },
   render: function() {
     var tileNodes = this.state.tiles.map(function (tileId) {
@@ -71,9 +82,10 @@ var TileGame = React.createClass({
           {tileNodes}
         </div>
         <br />
-        <button type="button" onClick={this.shuffleTiles}>Shuffle</button>
-        <br /><br />
+        <div>Time Elapsed: {numeral(this.state.secondsElapsed).format('00:00:00')}</div>
         <div>Moves: {this.state.moves}</div>
+        <br />
+        <button type="button" onClick={this.shuffleTiles}>Shuffle</button>
       </div>
     );
   }
