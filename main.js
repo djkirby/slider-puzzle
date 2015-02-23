@@ -57,6 +57,7 @@ var TileGame = React.createClass({
     this.startTimer();
   },
   startTimer: function() {
+    this.stopTimer();
     this.timer = setInterval(function() {
       this.setState({ secondsElapsed: this.state.secondsElapsed + 1 })
     }.bind(this), 1000);
