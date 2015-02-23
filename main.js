@@ -84,6 +84,7 @@ var TileGame = React.createClass({
     clearInterval(this.timer);
   },
   changeBoardSize: function(evt) {
+    this.reset();
     var newBoardSize = evt.target.value;
     var tiles = [];
     for (i = 1; i < newBoardSize; i++) {
