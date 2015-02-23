@@ -1,7 +1,8 @@
 var TileGame = React.createClass({
   getInitialState: function() {
     return {
-      tiles: [1, 2, 3, 4, 5, 6, 7, 8, null]
+      tiles: [1, 2, 3, 4, 5, 6, 7, 8, null],
+      moves: 0
     }
   },
   attemptToMoveTile: function(position) {
@@ -24,6 +25,7 @@ var TileGame = React.createClass({
   },
   handleClick: function(childComponent) {
     this.attemptToMoveTile(this.state.tiles.indexOf(childComponent.props.id));
+    this.setState({ moves: this.state.moves + 1 });
     this.checkCompletion();
   },
   checkCompletion: function() {
@@ -59,17 +61,19 @@ var TileGame = React.createClass({
     }.bind(this));
     tileNodes.splice(3, 0, <br />);
     tileNodes.splice(7, 0, <br />);
-    var style = {
+    var boardStyle = {
       width: "306px",
       border: "3px solid"
     }
     return (
       <div>
-        <div style={style}>
+        <div style={boardStyle}>
           {tileNodes}
         </div>
         <br />
         <button type="button" onClick={this.shuffleTiles}>Shuffle</button>
+        <br /><br />
+        <div>Moves: {this.state.moves}</div>
       </div>
     );
   }
