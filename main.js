@@ -8,12 +8,16 @@ var TileGame = React.createClass({
   },
   attemptToMoveTile: function(position) {
     if (position % 3 != 0 && !this.state.tiles[position - 1]) {
+      // move tile left
       this.swapTiles(position, position - 1);
     } else if ((position - 2) % 3 != 0 && !this.state.tiles[position + 1]) {
+      // move tile right
       this.swapTiles(position, position + 1);
     } else if (position > 2 && !this.state.tiles[position - 3]) {
+      // move tile up
       this.swapTiles(position, position - 3);
     } else if (position < 6 && !this.state.tiles[position + 3]) {
+      // move tile down
       this.swapTiles(position, position + 3);
     }
   },
@@ -24,7 +28,7 @@ var TileGame = React.createClass({
     tiles[tilePosition] = newTileId;
     this.setState({ tiles: tiles });
   },
-  handleClick: function(childComponent) {
+  handleTileClick: function(childComponent) {
     this.attemptToMoveTile(this.state.tiles.indexOf(childComponent.props.id));
     this.setState({ moves: this.state.moves + 1 });
     this.checkCompletion();
@@ -68,7 +72,7 @@ var TileGame = React.createClass({
   render: function() {
     var tileNodes = this.state.tiles.map(function (tileId) {
       return (
-        <Tile id={tileId} onClick={this.handleClick} />
+        <Tile id={tileId} onClick={this.handleTileClick} />
       );
     }.bind(this));
     tileNodes.splice(3, 0, <br />);
