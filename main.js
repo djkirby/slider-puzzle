@@ -52,7 +52,7 @@ var TileGame = React.createClass({
       if (emptyPosition < 6) {
         possibleMoves.push(emptyPosition + 3);
       }
-      this.attemptToMoveTile(possibleMoves[Math.floor(Math.random() * possibleMoves.length)]);
+      this.attemptToMoveTile(_.sample(possibleMoves));
     }
     this.startTimer();
   },
