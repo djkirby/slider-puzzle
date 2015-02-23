@@ -137,6 +137,6 @@ var Tile = React.createClass({
 });
 
 React.render(
-  <TileGame numTiles="25" />,
+  <TileGame numTiles="9" />,
   document.getElementById("content")
 );
