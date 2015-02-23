@@ -1,23 +1,21 @@
+var boardSizes = [9, 16, 25, 36];
+
 var TileGame = React.createClass({
   getDefaultProps: function() {
-    return {
-      numTiles: 9
-    }
+    boardSizes: [9, 16, 25, 36]
   },
   getInitialState: function() {
-    var tiles = [];
-    for (i = 1; i < this.props.numTiles; i++) {
-      tiles.push(i);
-    }
-    tiles.push(null);
     return {
-      tiles: tiles,
+      tiles: [1, 2, 3, 4, 5, 6, 7, 8, null],
       moves: 0,
       secondsElapsed: 0
     }
   },
+  numTiles: function() {
+    return this.state.tiles.length;
+  },
   attemptToMoveTile: function(position) {
-    var rowSize = Math.sqrt(this.props.numTiles);
+    var rowSize = Math.sqrt(this.numTiles());
     if (position % rowSize != 0 && !this.state.tiles[position - 1]) {
       // move tile left
       this.swapTiles(position, position - 1);
@@ -27,7 +25,7 @@ var TileGame = React.createClass({
     } else if (position > (rowSize - 1) && !this.state.tiles[position - rowSize]) {
       // move tile up
       this.swapTiles(position, position - rowSize);
-    } else if (position < (this.props.numTiles - rowSize) && !this.state.tiles[position + rowSize]) {
+    } else if (position < (this.numTiles() - rowSize) && !this.state.tiles[position + rowSize]) {
       // move tile down
       this.swapTiles(position, position + rowSize);
     }
@@ -54,7 +52,7 @@ var TileGame = React.createClass({
     this.reset();
     for (i = 0; i < 200; i++) {
       var emptyPosition = this.state.tiles.indexOf(null);
-      var rowSize = Math.sqrt(this.props.numTiles);
+      var rowSize = Math.sqrt(this.numTiles());
       possibleMoves = [];
       if ((emptyPosition + 1) % rowSize != 0) {
         possibleMoves.push(emptyPosition + 1);
@@ -65,7 +63,7 @@ var TileGame = React.createClass({
       if (emptyPosition > rowSize) {
         possibleMoves.push(emptyPosition - rowSize);
       }
-      if (emptyPosition < this.props.numTiles - rowSize) {
+      if (emptyPosition < this.numTiles() - rowSize) {
         possibleMoves.push(emptyPosition + rowSize);
       }
       this.attemptToMoveTile(_.sample(possibleMoves));
@@ -85,19 +83,33 @@ var TileGame = React.createClass({
   stopTimer: function() {
     clearInterval(this.timer);
   },
+  changeBoardSize: function(evt) {
+    var newBoardSize = evt.target.value;
+    var tiles = [];
+    for (i = 1; i < newBoardSize; i++) {
+      tiles.push(i);
+    }
+    tiles.push(null);
+    this.setState({ tiles: tiles });
+  },
   render: function() {
     var tileNodes = this.state.tiles.map(function (tileId) {
       return (
         <Tile id={tileId} onClick={this.handleTileClick} />
       );
     }.bind(this));
-    var rowSize = Math.sqrt(this.props.numTiles);
-    for (i = rowSize; i < this.props.numTiles; i += rowSize + 1) {
+    var rowSize = Math.sqrt(this.numTiles());
+    for (i = rowSize; i < this.numTiles(); i += rowSize + 1) {
       tileNodes.splice(i, 0, <br />);
     }
-    console.log(tileNodes);
+    var boardSizeOptions = this.props.boardSizes.map(function(item, index) {
+      return <option key={index} value={item}>{Math.sqrt(item) + " x " + Math.sqrt(item)}</option>
+    });
     return (
       <div>
+        <label>Puzzle Size: </label>
+        <select onChange={this.changeBoardSize} value={this.state.tiles.length}>{boardSizeOptions}</select>
+        <br /><br />
         <div>
           {tileNodes}
         </div>
@@ -141,6 +153,6 @@ var Tile = React.createClass({
 });
 
 React.render(
-  <TileGame numTiles="9" />,
+  <TileGame boardSizes={boardSizes} />,
   document.getElementById("content")
 );
