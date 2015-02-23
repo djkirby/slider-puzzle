@@ -1,24 +1,35 @@
 var TileGame = React.createClass({
-  getInitialState: function() {
+  getDefaultProps: function() {
     return {
-      tiles: [1, 2, 3, 4, 5, 6, 7, 8, null],
+      numTiles: 9
+    }
+  },
+  getInitialState: function() {
+    var tiles = [];
+    for (i = 1; i < this.props.numTiles; i++) {
+      tiles.push(i);
+    }
+    tiles.push(null);
+    return {
+      tiles: tiles,
       moves: 0,
       secondsElapsed: 0
     }
   },
   attemptToMoveTile: function(position) {
-    if (position % 3 != 0 && !this.state.tiles[position - 1]) {
+    var rowSize = Math.sqrt(this.props.numTiles);
+    if (position % rowSize != 0 && !this.state.tiles[position - 1]) {
       // move tile left
       this.swapTiles(position, position - 1);
-    } else if ((position - 2) % 3 != 0 && !this.state.tiles[position + 1]) {
+    } else if ((position + 1) % rowSize != 0 && !this.state.tiles[position + 1]) {
       // move tile right
       this.swapTiles(position, position + 1);
-    } else if (position > 2 && !this.state.tiles[position - 3]) {
+    } else if (position > (rowSize - 1) && !this.state.tiles[position - rowSize]) {
       // move tile up
-      this.swapTiles(position, position - 3);
-    } else if (position < 6 && !this.state.tiles[position + 3]) {
+      this.swapTiles(position, position - rowSize);
+    } else if (position < (this.props.numTiles - rowSize) && !this.state.tiles[position + rowSize]) {
       // move tile down
-      this.swapTiles(position, position + 3);
+      this.swapTiles(position, position + rowSize);
     }
   },
   swapTiles: function(tilePosition, newPosition) {
@@ -43,18 +54,19 @@ var TileGame = React.createClass({
     this.setState(this.getInitialState());
     for (i = 0; i < 200; i++) {
       var emptyPosition = this.state.tiles.indexOf(null);
+      var rowSize = Math.sqrt(this.props.numTiles);
       possibleMoves = [];
-      if ((emptyPosition - 2) % 3 != 0) {
+      if ((emptyPosition + 1) % rowSize != 0) {
         possibleMoves.push(emptyPosition + 1);
       }
-      if (emptyPosition % 3 != 0) {
+      if (emptyPosition % rowSize != 0) {
         possibleMoves.push(emptyPosition - 1);
       }
-      if (emptyPosition > 3) {
-        possibleMoves.push(emptyPosition - 3);
+      if (emptyPosition > rowSize) {
+        possibleMoves.push(emptyPosition - rowSize);
       }
-      if (emptyPosition < 6) {
-        possibleMoves.push(emptyPosition + 3);
+      if (emptyPosition < this.props.numTiles - rowSize) {
+        possibleMoves.push(emptyPosition + rowSize);
       }
       this.attemptToMoveTile(_.sample(possibleMoves));
     }
@@ -75,15 +87,14 @@ var TileGame = React.createClass({
         <Tile id={tileId} onClick={this.handleTileClick} />
       );
     }.bind(this));
-    tileNodes.splice(3, 0, <br />);
-    tileNodes.splice(7, 0, <br />);
-    var boardStyle = {
-      width: "306px",
-      border: "3px solid"
+    var rowSize = Math.sqrt(this.props.numTiles);
+    for (i = rowSize; i < this.props.numTiles; i += rowSize + 1) {
+      tileNodes.splice(i, 0, <br />);
     }
+    console.log(tileNodes);
     return (
       <div>
-        <div style={boardStyle}>
+        <div>
           {tileNodes}
         </div>
         <br />
@@ -126,6 +137,6 @@ var Tile = React.createClass({
 });
 
 React.render(
-  <TileGame />,
+  <TileGame numTiles="25" />,
   document.getElementById("content")
 );
