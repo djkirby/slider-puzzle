@@ -51,7 +51,7 @@ var TileGame = React.createClass({
     }
   },
   shuffleTiles: function() {
-    this.setState(this.getInitialState());
+    this.reset();
     for (i = 0; i < 200; i++) {
       var emptyPosition = this.state.tiles.indexOf(null);
       var rowSize = Math.sqrt(this.props.numTiles);
@@ -71,6 +71,10 @@ var TileGame = React.createClass({
       this.attemptToMoveTile(_.sample(possibleMoves));
     }
     this.startTimer();
+  },
+  reset: function() {
+    this.setState(this.getInitialState());
+    this.stopTimer();
   },
   startTimer: function() {
     this.stopTimer();
@@ -101,7 +105,7 @@ var TileGame = React.createClass({
         <div>Time Elapsed: {numeral(this.state.secondsElapsed).format('00:00:00')}</div>
         <div>Moves: {this.state.moves}</div>
         <br />
-        <button type="button" onClick={this.shuffleTiles}>Shuffle</button>
+        <button type="button" onClick={this.shuffleTiles}>Shuffle</button><button type="button" onClick={this.reset}>Reset</button>
       </div>
     );
   }
