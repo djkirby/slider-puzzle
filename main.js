@@ -107,7 +107,7 @@ var Tile = React.createClass({
       width: 100,
       lineHeight: 3,
       verticalAlign: "middle",
-      fontSize: 32,
+      fontSize: 36,
       fontWeight: "bold",
       display: "inline-block",
       textAlign: "center",
