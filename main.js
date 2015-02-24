@@ -43,7 +43,12 @@ var TileGame = React.createClass({
     this.checkCompletion();
   },
   checkCompletion: function() {
-    if (_.isEqual(this.state.tiles, this.getInitialState().tiles)) {
+    var tiles = [];
+    for (i = 1; i < this.state.tiles.length; i++) {
+      tiles.push(i);
+    }
+    tiles.push(null);
+    if (_.isEqual(this.state.tiles, tiles)) {
       alert('Winner!');
       this.stopTimer();
     }
