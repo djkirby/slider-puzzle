@@ -1,8 +1,6 @@
-var boardSizes = [9, 16, 25, 36];
-
 var TileGame = React.createClass({
   getDefaultProps: function() {
-    boardSizes: [9, 16, 25, 36]
+    puzzleSizes: [9, 16, 25, 36]
   },
   getInitialState: function() {
     return {
@@ -11,36 +9,85 @@ var TileGame = React.createClass({
       secondsElapsed: 0
     }
   },
-  numTiles: function() {
-    return this.state.tiles.length;
+  changePuzzleSize: function(puzzleSize) {
+    this.reset();
+    var tiles = [];
+    for (i = 1; i < puzzleSize.size; i++) {
+      tiles.push(i);
+    }
+    tiles.push(null);
+    this.setState({ tiles: tiles });
   },
-  attemptToMoveTile: function(position) {
-    var rowSize = Math.sqrt(this.numTiles());
-    if (position % rowSize != 0 && !this.state.tiles[position - 1]) {
-      // move tile left
-      this.swapTiles(position, position - 1);
-    } else if ((position + 1) % rowSize != 0 && !this.state.tiles[position + 1]) {
-      // move tile right
-      this.swapTiles(position, position + 1);
-    } else if (position > (rowSize - 1) && !this.state.tiles[position - rowSize]) {
-      // move tile up
-      this.swapTiles(position, position - rowSize);
-    } else if (position < (this.numTiles() - rowSize) && !this.state.tiles[position + rowSize]) {
-      // move tile down
-      this.swapTiles(position, position + rowSize);
+  shuffleTiles: function() {
+    var tiles = [];
+    for (i = 1; i < this.state.tiles.length; i++) {
+      tiles.push(i);
+    }
+    tiles.push(null);
+    var rowSize = Math.sqrt(tiles.length);
+    for (i = 0; i < 200; i++) {
+      var emptyPosition = tiles.indexOf(null);
+      possibleMoves = [];
+      if ((emptyPosition + 1) % rowSize != 0) {
+        possibleMoves.push(emptyPosition + 1);
+      }
+      if (emptyPosition % rowSize != 0) {
+        possibleMoves.push(emptyPosition - 1);
+      }
+      if (emptyPosition > rowSize - 1) {
+        possibleMoves.push(emptyPosition - rowSize);
+      }
+      if (emptyPosition < tiles.length - rowSize) {
+        possibleMoves.push(emptyPosition + rowSize);
+      }
+      tiles = this.moveTile(tiles, tiles[_.sample(possibleMoves)]);
+    }
+    this.setState({ tiles: tiles, moves: 0, secondsElapsed: 0 });
+    this.stopTimer();
+    this.startTimer();
+  },
+  handleTileClick: function(id) {
+    if (tiles = this.moveTile(this.state.tiles, id)) {
+      this.setState({ tiles: tiles, moves: this.state.moves + 1 });
+      this.checkCompletion();
     }
   },
-  swapTiles: function(tilePosition, newPosition) {
-    var tiles = this.state.tiles;
+  moveTile: function(tiles, id) {
+    var position = tiles.indexOf(id);
+    var rowSize = Math.sqrt(tiles.length);
+    if (position % rowSize != 0 && !tiles[position - 1]) { // move left
+      return this.swapTiles(tiles, position, position - 1);
+    } else if ((position + 1) % rowSize != 0 && !tiles[position + 1]) { // move right
+      return this.swapTiles(tiles, position, position + 1);
+    } else if (position > (rowSize - 1) && !tiles[position - rowSize]) { // move up
+      return this.swapTiles(tiles, position, position - rowSize);
+    } else if (position < (tiles.length - rowSize) && !tiles[position + rowSize]) { // move down
+      return this.swapTiles(tiles, position, position + rowSize);
+    }
+  },
+  swapTiles: function(tiles, tilePosition, newPosition) {
     var newTileId = tiles[newPosition];
     tiles[newPosition] = tiles[tilePosition];
     tiles[tilePosition] = newTileId;
-    this.setState({ tiles: tiles });
+    return tiles;
   },
-  handleTileClick: function(childComponent) {
-    this.attemptToMoveTile(this.state.tiles.indexOf(childComponent.props.id));
-    this.setState({ moves: this.state.moves + 1 });
-    this.checkCompletion();
+  reset: function(callback) {
+    var tiles = [];
+    for (i = 1; i < this.state.tiles.length; i++) {
+      tiles.push(i);
+    }
+    tiles.push(null);
+    this.setState({ tiles: tiles, moves: 0, secondsElapsed: 0 });
+    this.stopTimer();
+  },
+  startTimer: function() {
+    this.stopTimer();
+    this._timer = setInterval(function() {
+      this.setState({ secondsElapsed: this.state.secondsElapsed + 1 })
+    }.bind(this), 1000);
+  },
+  stopTimer: function() {
+    clearInterval(this._timer);
   },
   checkCompletion: function() {
     var tiles = [];
@@ -53,77 +100,94 @@ var TileGame = React.createClass({
       this.stopTimer();
     }
   },
-  shuffleTiles: function() {
-    this.reset();
-    for (i = 0; i < 200; i++) {
-      var emptyPosition = this.state.tiles.indexOf(null);
-      var rowSize = Math.sqrt(this.numTiles());
-      possibleMoves = [];
-      if ((emptyPosition + 1) % rowSize != 0) {
-        possibleMoves.push(emptyPosition + 1);
-      }
-      if (emptyPosition % rowSize != 0) {
-        possibleMoves.push(emptyPosition - 1);
-      }
-      if (emptyPosition > rowSize) {
-        possibleMoves.push(emptyPosition - rowSize);
-      }
-      if (emptyPosition < this.numTiles() - rowSize) {
-        possibleMoves.push(emptyPosition + rowSize);
-      }
-      this.attemptToMoveTile(_.sample(possibleMoves));
+  render: function() {
+    return (
+      <div>
+        <PuzzleSizeForm selectedSize={this.state.tiles.length} onPuzzleSizeChange={this.changePuzzleSize} />
+        <br />
+        <Puzzle tiles={this.state.tiles} onMoveTile={this.handleTileClick} />
+        <br />
+        <StatsBox secondsElapsed={this.state.secondsElapsed} moves={this.state.moves} />
+        <br />
+        <ButtonBar onShuffleTiles={this.shuffleTiles} onReset={this.reset} />
+      </div>
+    );
+  }
+});
+
+var PuzzleSizeForm = React.createClass({
+  getDefaultProps: function() {
+    return {
+      selectedSize: 9,
+      puzzleSizes: [9, 16, 25, 36]
     }
-    this.startTimer();
   },
-  reset: function() {
-    this.setState(this.getInitialState());
-    this.stopTimer();
-  },
-  startTimer: function() {
-    this.stopTimer();
-    this.timer = setInterval(function() {
-      this.setState({ secondsElapsed: this.state.secondsElapsed + 1 })
-    }.bind(this), 1000);
-  },
-  stopTimer: function() {
-    clearInterval(this.timer);
-  },
-  changeBoardSize: function(evt) {
-    this.reset();
-    var newBoardSize = evt.target.value;
-    var tiles = [];
-    for (i = 1; i < newBoardSize; i++) {
-      tiles.push(i);
-    }
-    tiles.push(null);
-    this.setState({ tiles: tiles });
+  handleChange: function(e) {
+    this.props.onPuzzleSizeChange({ size: e.target.value });
   },
   render: function() {
-    var tileNodes = this.state.tiles.map(function (tileId) {
-      return (
-        <Tile id={tileId} onClick={this.handleTileClick} />
-      );
-    }.bind(this));
-    var rowSize = Math.sqrt(this.numTiles());
-    for (i = rowSize; i < this.numTiles(); i += rowSize + 1) {
-      tileNodes.splice(i, 0, <br />);
-    }
-    var boardSizeOptions = this.props.boardSizes.map(function(item, index) {
+    var boardSizeOptions = this.props.puzzleSizes.map(function(item, index) {
       return <option key={index} value={item}>{Math.sqrt(item) + " x " + Math.sqrt(item)}</option>
     });
     return (
       <div>
         <label>Puzzle Size: </label>
-        <select onChange={this.changeBoardSize} value={this.state.tiles.length}>{boardSizeOptions}</select>
-        <br /><br />
-        <div>
-          {tileNodes}
-        </div>
-        <br />
-        <div>Time Elapsed: {numeral(this.state.secondsElapsed).format('00:00:00')}</div>
-        <div>Moves: {this.state.moves}</div>
-        <br />
-        <button type="button" onClick={this.shuffleTiles}>Shuffle</button><button type="button" onClick={this.reset}>Reset</button>
+        <select onChange={this.handleChange} value={this.props.selectedSize}>{boardSizeOptions}</select>
+      </div>
+    );
+  }
+});
+
+var Puzzle = React.createClass({
+  moveTile: function(tile) {
+    this.props.onMoveTile(tile.props.id);
+  },
+  render: function() {
+    var tiles = this.props.tiles;
+    var tileNodes = tiles.map(function (tileId) {
+      return (
+        <Tile id={tileId} onMove={this.moveTile} />
+      );
+    }.bind(this));
+    for (i = Math.sqrt(tiles.length); i < tiles.length; i += Math.sqrt(tiles.length) + 1) {
+      tileNodes.splice(i, 0, <br />);
+    }
+    return (
+      <div>
+        {tileNodes}
+      </div>
+    );
+  }
+});
+
+var StatsBox = React.createClass({
+  getDefaultProps: function() {
+    return {
+      secondsElapsed: 0,
+      moves: 0
+    }
+  },
+  render: function() {
+    return (
+      <div>
+        <div>Time Elapsed: {numeral(this.props.secondsElapsed).format('00:00:00')}</div>
+        <div>Moves: {this.props.moves}</div>
+      </div>
+    );
+  }
+});
+
+var ButtonBar = React.createClass({
+  handleShuffleClick: function(e) {
+    this.props.onShuffleTiles({});
+  },
+  handleResetClick: function(e) {
+    this.props.onReset({});
+  },
+  render: function() {
+    return (
+      <div>
+        <button type="button" onClick={this.handleShuffleClick}>Shuffle</button><button type="button" onClick={this.handleResetClick}>Reset</button>
       </div>
     );
   }
@@ -135,8 +199,8 @@ var Tile = React.createClass({
       id: ""
     }
   },
-  handleClick: function() {
-    this.props.onClick(this);
+  handleClick: function(e) {
+    this.props.onMove(this);
   },
   render: function() {
     var style = {
@@ -158,7 +222,9 @@ var Tile = React.createClass({
   }
 });
 
+var puzzleSizes = [9, 16, 25, 36];
+
 React.render(
-  <TileGame boardSizes={boardSizes} />,
+  <TileGame puzzleSizes={puzzleSizes} />,
   document.getElementById("content")
 );
