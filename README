@@ -1,6 +1,6 @@
 # N-puzzle slider game using React.js.
 
-Setup:
+Setup instructions:
   bower install
   python -m SimpleHTTPServer
 
