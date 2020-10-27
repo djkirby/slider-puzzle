@@ -228,3 +228,4 @@ React.render(
   <TileGame puzzleSizes={puzzleSizes} />,
   document.getElementById("content")
 );
+
